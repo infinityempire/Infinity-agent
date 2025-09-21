@@ -1,0 +1,31 @@
+name: Deploy static PWA to GitHub Pages
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preflight
+        run: |
+          echo "[preflight] repo root:" && ls -la
+          [ -d public ] && [ -f public/index.html ] || { echo "::error::public assets missing"; exit 1; }
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - name: Enable GitHub Pages (workflow build)
+        run: |
+          gh api -X PUT "repos/${{ github.repository }}/pages" -f build_type=workflow >/dev/null || true
+          gh api -X PUT "repos/${{ github.repository }}/pages/site" -H "Accept: application/vnd.github+json" >/dev/null || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/deploy-pages@v4

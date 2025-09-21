@@ -1,0 +1,23 @@
+<!doctype html><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Infinity Agent</title>
+<meta name="theme-color" content="#0f172a">
+<link rel="icon" href="/Infinity-agent/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/Infinity-agent/icon-192.png">
+<link rel="manifest" href="/Infinity-agent/manifest.webmanifest">
+<div style="font-family:system-ui;max-width:760px;margin:64px auto;padding:24px;border:1px solid #1f2937;border-radius:12px;background:#111827;color:#e2e8f0">
+  <h1>Infinity Agent — PWA (GitHub Pages)</h1>
+  <p>Base path: <code>/Infinity-agent</code></p>
+  <p>Service Worker: <code id="sw">checking…</code></p>
+  <button id="ping" style="padding:10px 14px;border-radius:10px;background:#22c55e;border:0;color:#041">Offline Ping</button>
+  <pre id="out"></pre>
+</div>
+<script type="module">
+  const base = '/Infinity-agent';
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register(`${base}/sw.js`)
+      .then(()=>document.getElementById('sw').textContent='registered')
+      .catch(e=>document.getElementById('sw').textContent='failed: '+e.message);
+  } else { document.getElementById('sw').textContent='unsupported'; }
+  document.getElementById('ping').onclick=()=>{document.getElementById('out').textContent='PONG (offline-capable)';};
+</script>
