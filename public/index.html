@@ -1,23 +1,285 @@
-<!doctype html><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Infinity Agent</title>
-<meta name="theme-color" content="#0f172a">
-<link rel="icon" href="/Infinity-agent/icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/Infinity-agent/icon-192.png">
-<link rel="manifest" href="/Infinity-agent/manifest.webmanifest">
-<div style="font-family:system-ui;max-width:760px;margin:64px auto;padding:24px;border:1px solid #1f2937;border-radius:12px;background:#111827;color:#e2e8f0">
-  <h1>Infinity Agent — PWA (GitHub Pages)</h1>
-  <p>Base path: <code>/Infinity-agent</code></p>
-  <p>Service Worker: <code id="sw">checking…</code></p>
-  <button id="ping" style="padding:10px 14px;border-radius:10px;background:#22c55e;border:0;color:#041">Offline Ping</button>
-  <pre id="out"></pre>
-</div>
-<script type="module">
-  const base = '/Infinity-agent';
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register(`${base}/sw.js`)
-      .then(()=>document.getElementById('sw').textContent='registered')
-      .catch(e=>document.getElementById('sw').textContent='failed: '+e.message);
-  } else { document.getElementById('sw').textContent='unsupported'; }
-  document.getElementById('ping').onclick=()=>{document.getElementById('out').textContent='PONG (offline-capable)';};
-</script>
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Infinity Agent — Offline Harness</title>
+    <meta name="description" content="Infinity Agent GitHub Pages shell with service worker-powered offline ping." />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="icon" type="image/svg+xml" href="/Infinity-agent/icon.svg" />
+    <link rel="apple-touch-icon" href="/Infinity-agent/icon-192.png" />
+    <link rel="manifest" href="/Infinity-agent/manifest.webmanifest" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #020617;
+        --card: rgba(15, 23, 42, 0.8);
+        --border: rgba(148, 163, 184, 0.2);
+        --accent: #38bdf8;
+        --accent-strong: #0ea5e9;
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --danger: #f87171;
+        --success: #34d399;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: radial-gradient(circle at top, rgba(14, 165, 233, 0.18), transparent 55%), var(--bg);
+        color: var(--text);
+        display: grid;
+        place-items: center;
+        padding: 32px 16px;
+      }
+
+      main {
+        width: min(720px, 100%);
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 32px;
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.35);
+        backdrop-filter: blur(18px);
+      }
+
+      h1 {
+        font-size: clamp(1.75rem, 5vw, 2.4rem);
+        margin-bottom: 0.25rem;
+      }
+
+      h2 {
+        font-size: 1.1rem;
+        margin-top: 2rem;
+        margin-bottom: 0.5rem;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      p {
+        margin: 0.5rem 0 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      button {
+        appearance: none;
+        border: none;
+        border-radius: 999px;
+        padding: 0.75rem 1.4rem;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #001933;
+        background: linear-gradient(120deg, var(--accent), var(--accent-strong));
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+        box-shadow: 0 12px 30px rgba(14, 165, 233, 0.32);
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: wait;
+        box-shadow: none;
+      }
+
+      button:not(:disabled):hover {
+        transform: translateY(-1px);
+        box-shadow: 0 14px 26px rgba(14, 165, 233, 0.4);
+      }
+
+      dl.status {
+        margin: 0;
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      }
+
+      dl.status > div {
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: rgba(15, 23, 42, 0.6);
+      }
+
+      dl.status dt {
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 0.35rem;
+      }
+
+      dl.status dd {
+        margin: 0;
+        font-size: 1.1rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      dl.status dd[data-state="online"] {
+        color: var(--success);
+      }
+
+      dl.status dd[data-state="offline"] {
+        color: var(--danger);
+      }
+
+      pre {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: rgba(2, 6, 23, 0.6);
+        border-radius: 16px;
+        border: 1px dashed rgba(148, 163, 184, 0.25);
+        min-height: 96px;
+        overflow-x: auto;
+        font-family: "JetBrains Mono", "Fira Code", monospace;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        color: var(--muted);
+        white-space: pre-wrap;
+      }
+
+      footer {
+        margin-top: 2.5rem;
+        font-size: 0.8rem;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      footer a {
+        color: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Infinity Agent PWA</h1>
+        <p>
+          Offline-ready shell deployed on GitHub Pages. Use the controls below to validate that the
+          service worker is registered and the offline ping endpoint responds without a network.
+        </p>
+      </header>
+
+      <section aria-labelledby="status-heading">
+        <h2 id="status-heading">Runtime status</h2>
+        <dl class="status">
+          <div>
+            <dt>Service worker</dt>
+            <dd id="sw-status">checking…</dd>
+          </div>
+          <div>
+            <dt>Network</dt>
+            <dd id="network-status" data-state="offline">detecting…</dd>
+          </div>
+          <div>
+            <dt>Last ping</dt>
+            <dd id="last-ping">never</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section aria-labelledby="ping-heading">
+        <h2 id="ping-heading">Offline ping</h2>
+        <p>
+          The button dispatches a request to <code>/Infinity-agent/offline-ping</code>. The service worker fulfils the
+          request with a timestamped payload so the same response is available offline.
+        </p>
+        <button id="ping-button" type="button">Run offline ping</button>
+        <pre id="ping-log" aria-live="polite" aria-atomic="true">Ready.</pre>
+      </section>
+
+      <footer>
+        Base path: <code>/Infinity-agent</code>
+        · Service worker scope: <code>/Infinity-agent/</code>
+      </footer>
+    </main>
+
+    <script type="module">
+      const BASE_PATH = '/Infinity-agent';
+      const SW_URL = `${BASE_PATH}/sw.js`;
+      const swStatus = document.getElementById('sw-status');
+      const networkStatus = document.getElementById('network-status');
+      const lastPing = document.getElementById('last-ping');
+      const pingButton = document.getElementById('ping-button');
+      const pingLog = document.getElementById('ping-log');
+
+      const formatTime = (timestamp) => {
+        try {
+          return new Intl.DateTimeFormat(undefined, {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          }).format(timestamp);
+        } catch (err) {
+          return new Date(timestamp).toLocaleTimeString();
+        }
+      };
+
+      const setNetworkState = () => {
+        const isOnline = navigator.onLine;
+        networkStatus.textContent = isOnline ? 'online' : 'offline';
+        networkStatus.dataset.state = isOnline ? 'online' : 'offline';
+      };
+      setNetworkState();
+      window.addEventListener('online', setNetworkState);
+      window.addEventListener('offline', setNetworkState);
+
+      const registerServiceWorker = async () => {
+        if (!('serviceWorker' in navigator)) {
+          swStatus.textContent = 'unsupported';
+          return;
+        }
+
+        swStatus.textContent = 'registering…';
+        try {
+          const registration = await navigator.serviceWorker.register(SW_URL, {
+            scope: `${BASE_PATH}/`,
+          });
+
+          if (registration.waiting) {
+            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          }
+
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            swStatus.textContent = 'updated';
+          });
+
+          swStatus.textContent = 'registered';
+        } catch (error) {
+          swStatus.textContent = `failed: ${error.message}`;
+        }
+      };
+
+      registerServiceWorker();
+
+      const runPing = async () => {
+        pingButton.disabled = true;
+        pingLog.textContent = 'Running ping…';
+        try {
+          const response = await fetch(`${BASE_PATH}/offline-ping?ts=${Date.now()}`, {
+            cache: 'no-store',
+          });
+          const payload = await response.json();
+          lastPing.textContent = formatTime(payload.ts);
+          pingLog.textContent = JSON.stringify(payload, null, 2);
+        } catch (error) {
+          pingLog.textContent = `Ping failed: ${error.message}`;
+        } finally {
+          pingButton.disabled = false;
+        }
+      };
+
+      pingButton.addEventListener('click', runPing);
+
+      if (new URLSearchParams(window.location.search).get('ping') === 'true') {
+        runPing();
+      }
+    </script>
+  </body>
+</html>
