@@ -32,7 +32,7 @@ jobs:
 
       - name: Build project
         env:
-          VITE_HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          VITE_HF_TOKEN: ${{ secrets.HF_READ_TOKEN }}
         run: npm run build
 
       - name: Copy 404.html to dist for SPA routing

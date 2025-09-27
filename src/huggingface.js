@@ -2,8 +2,8 @@
 
 // Get HF token from environment variables
 function getHFToken() {
-  // In production, this will use the GitHub Secret HF_TOKEN
-  return import.meta.env.VITE_HF_TOKEN || process.env.HF_TOKEN || null
+  // In production, this will use the GitHub Secret HF_READ_TOKEN
+  return import.meta.env.VITE_HF_TOKEN || process.env.HF_READ_TOKEN || null
 }
 
 export async function getAIResponse(message) {
