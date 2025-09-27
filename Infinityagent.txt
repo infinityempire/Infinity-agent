@@ -1,0 +1,79 @@
+diff --git a/README.md b/README.md
+--- a/README.md
++++ b/README.md
+@@ -5,1 +5,1 @@
+-## Project layout
++## Project layout
+
+@@ -6,1 +6,1 @@
+-- `public/index.html` â main entry document that registers the service worker and exposes the offline ping control.
++
+- `public/index.html` â main entry document that registers the service worker and exposes the offline ping control.
+@@ -13,1 +13,1 @@
+-## Running the bundle locally
++## Running the bundle locally
+
+@@ -14,1 +14,1 @@
+-1. Serve the `public/` directory with a static HTTP server so the service worker can register:
++
+1. Serve the `public/` directory with a static HTTP server so the service worker can register:
+@@ -22,1 +22,1 @@
+-## Deployment
++## Deployment
+
+@@ -25,1 +25,1 @@
+-## Customising
++## Customising
+
+@@ -26,1 +26,1 @@
+-- Update icons inside `public/` to reflect your branding. Keep both PNG sizes and the SVG for splash and favicon support.
++
+- Update icons inside `public/` to reflect your branding. Keep both PNG sizes and the SVG for splash and favicon support.
+diff --git a/public/sw.js b/public/sw.js
+--- a/public/sw.js
++++ b/public/sw.js
+@@ -9,1 +9,1 @@
+-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache)))
++  event.waitUntil(caches.open(CACHE_NAME).then(function(cache) { return cache.addAll(urlsToCache) }))
+@@ -16,1 +16,1 @@
+-      Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : null)))
++      Promise.all(keys.map(function(k) { return (k !== CACHE_NAME ? caches.delete(k) : null) }))
+@@ -24,1 +24,1 @@
+-    caches.match(event.request).then((resp) => resp || fetch(event.request))
++    caches.match(event.request).then(function(resp) { return resp || fetch(event.request) })
+diff --git a/src/App.jsx b/src/App.jsx
+--- a/src/App.jsx
++++ b/src/App.jsx
+@@ -50,1 +50,1 @@
+-      setMessages(prev => [...prev, newMessage])
++      setMessages(function(prev) { return [...prev, newMessage] })
+@@ -62,1 +62,1 @@
+-      setMessages(prev => [...prev, errorMessage])
++      setMessages(function(prev) { return [...prev, errorMessage] })
+@@ -76,1 +76,1 @@
+-    setMessages(prev => [...prev, userMessage])
++    setMessages(function(prev) { return [...prev, userMessage] })
+diff --git a/src/huggingface.js b/src/huggingface.js
+--- a/src/huggingface.js
++++ b/src/huggingface.js
+@@ -30,1 +30,1 @@
+-      console.log(`Trying model: ${model}`)
++      console.log("Trying model: "+model)
+@@ -32,1 +32,1 @@
+-      const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
++      const response = await fetch("https://api-inference.huggingface.co/models/"+model, {
+@@ -35,1 +35,1 @@
+-          'Authorization': `Bearer ${token}`,
++          'Authorization': "Bearer "+token,
+@@ -53,1 +53,1 @@
+-      console.log(`Response status: ${response.status}`)
++      console.log("Response status: "+response.status)
+@@ -101,1 +101,1 @@
+-        console.log(`Model ${model} failed with status ${response.status}:`, errorText)
++        console.log("Model "+model+" failed with status "+response.status+":", errorText)
+@@ -106,1 +106,1 @@
+-          await new Promise(resolve => setTimeout(resolve, 3000))
++          await new Promise(resolve => {setTimeout(resolve, 3000)})
+@@ -117,1 +117,1 @@
+-      console.error(`Error with model ${model}:`, error)
++      console.error("Error with model "+model+":", error)
