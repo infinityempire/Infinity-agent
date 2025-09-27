@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import './styles.css'
+import { getAIResponse } from './huggingface.js'
 
 function App() {
   const [isAgentActive, setIsAgentActive] = useState(false)
@@ -21,7 +22,7 @@ function App() {
     setMessages([
       {
         id: 1,
-        text: "שלום! אני Infinity Agent - הסוכן הדיגיטלי שלך. איך אני יכול לעזור לך היום?",
+        text: "שלום! אני Infinity Agent - סוכן AI חכם שמשתמש ב-Hugging Face לתגובות מתקדמות. איך אני יכול לעזור לך היום?",
         sender: 'agent',
         timestamp: new Date()
       }
@@ -31,84 +32,32 @@ function App() {
   const simulateAgentResponse = async (userMessage) => {
     setIsTyping(true)
     
-    // Simulate thinking time
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000))
-    
-    let response = ""
-    
-    // Simple AI-like responses based on keywords
-    const lowerMessage = userMessage.toLowerCase()
-    
-    if (lowerMessage.includes('שלום') || lowerMessage.includes('היי') || lowerMessage.includes('hello')) {
-      response = "שלום! נעים להכיר. איך אני יכול לעזור לך?"
-    } else if (lowerMessage.includes('מה השעה') || lowerMessage.includes('זמן')) {
-      response = `השעה כרגע היא ${new Date().toLocaleTimeString('he-IL')}`
-    } else if (lowerMessage.includes('מה התאריך') || lowerMessage.includes('תאריך')) {
-      response = `התאריך היום הוא ${new Date().toLocaleDateString('he-IL')}`
-    } else if (lowerMessage.includes('חישוב') || lowerMessage.includes('מתמטיקה') || /\d+[\+\-\*\/]\d+/.test(lowerMessage)) {
-      try {
-        const mathExpression = lowerMessage.match(/(\d+(?:\.\d+)?)\s*([+\-*/])\s*(\d+(?:\.\d+)?)/)?.[0]
-        if (mathExpression) {
-          const match = lowerMessage.match(/(\d+(?:\.\d+)?)\s*([+\-*/])\s*(\d+(?:\.\d+)?)/)
-          if (match) {
-            const [, num1, operator, num2] = match
-            const a = parseFloat(num1)
-            const b = parseFloat(num2)
-            let result
-            
-            switch (operator) {
-              case '+': result = a + b; break
-              case '-': result = a - b; break
-              case '*': result = a * b; break
-              case '/': result = b !== 0 ? a / b : 'לא ניתן לחלק באפס'; break
-              default: result = 'פעולה לא נתמכת'
-            }
-            
-            response = `התוצאה של ${mathExpression} היא: ${result}`
-          } else {
-            response = "אני יכול לעזור לך עם חישובים! נסה לכתוב משהו כמו '5+3' או '10*2'"
-          }
-        } else {
-          response = "אני יכול לעזור לך עם חישובים! נסה לכתוב משהו כמו '5+3' או '10*2'"
-        }
-      } catch (error) {
-        response = "מצטער, לא הצלחתי לחשב את זה. נסה שוב עם ביטוי מתמטי פשוט."
+    try {
+      // Get AI response from Hugging Face API
+      const response = await getAIResponse(userMessage)
+      
+      setIsTyping(false)
+      
+      const newMessage = {
+        id: Date.now(),
+        text: response,
+        sender: 'agent',
+        timestamp: new Date()
       }
-    } else if (lowerMessage.includes('מזג אויר') || lowerMessage.includes('טמפרטורה')) {
-      response = "מצטער, אני לא מחובר לשירותי מזג אויר כרגע. אבל אני יכול לעזור לך עם משימות אחרות!"
-    } else if (lowerMessage.includes('עזרה') || lowerMessage.includes('help')) {
-      response = `אני יכול לעזור לך עם:
-• מענה על שאלות כלליות
-• חישובים מתמטיים פשוטים  
-• מידע על זמן ותאריך
-• שיחה כללית
-• ועוד הרבה דברים! פשוט שאל אותי`
-    } else if (lowerMessage.includes('תודה') || lowerMessage.includes('thanks')) {
-      response = "בכיף! אני כאן בשבילך. יש עוד משהו שאני יכול לעזור בו?"
-    } else if (lowerMessage.includes('מי אתה') || lowerMessage.includes('מה אתה')) {
-      response = "אני Infinity Agent - סוכן AI דיגיטלי שנוצר כדי לעזור לך במגוון משימות. אני יכול לענות על שאלות, לעזור עם חישובים ולשוחח איתך!"
-    } else {
-      const responses = [
-        "זה מעניין! ספר לי עוד על זה.",
-        "אני מבין. איך אני יכול לעזור לך עם זה?",
-        "זו שאלה טובה! בואו נחשוב על זה יחד.",
-        "מעניין מאוד. יש לך שאלות נוספות?",
-        "אני כאן כדי לעזור. מה עוד אתה רוצה לדעת?",
-        "זה נושא מרתק! איך אני יכול לסייע לך בנושא הזה?"
-      ]
-      response = responses[Math.floor(Math.random() * responses.length)]
+      
+      setMessages(prev => [...prev, newMessage])
+    } catch (error) {
+      setIsTyping(false)
+      
+      const errorMessage = {
+        id: Date.now(),
+        text: "מצטער, יש לי בעיה טכנית כרגע. נסה שוב בעוד רגע.",
+        sender: 'agent',
+        timestamp: new Date()
+      }
+      
+      setMessages(prev => [...prev, errorMessage])
     }
-    
-    setIsTyping(false)
-    
-    const newMessage = {
-      id: Date.now(),
-      text: response,
-      sender: 'agent',
-      timestamp: new Date()
-    }
-    
-    setMessages(prev => [...prev, newMessage])
   }
 
   const handleSendMessage = async () => {
@@ -140,8 +89,8 @@ function App() {
       <div className="welcome-screen">
         <div className="welcome-content">
           <h1>🚀 Infinity Agent</h1>
-          <p>הסוכן הדיגיטלי החכם שלך</p>
-          <p>מוכן לעזור לך עם שאלות, חישובים, ומשימות יומיומיות</p>
+          <p>סוכן AI חכם מבוסס Hugging Face</p>
+          <p>מוכן לעזור לך עם שאלות, חישובים, ומשימות יומיומיות - לחלוטין בחינם!</p>
           <button 
             onClick={handleStartAgent}
             className="start-button"
