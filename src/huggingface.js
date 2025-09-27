@@ -1,15 +1,21 @@
 // Hugging Face API integration for real AI responses
 
-// Get HF token (in production, this should come from environment variables)
+// Get HF token from environment variables
 function getHFToken() {
-  // Split token to avoid GitHub detection
-  const part1 = 'hf_EFFsLEfJHNSertzXgbjd'
-  const part2 = 'MZtohQPBPmVhYE'
-  return part1 + part2
+  // In production, this will use the GitHub Secret HF_READ_TOKEN
+  return import.meta.env.VITE_HF_TOKEN || process.env.HF_READ_TOKEN || null
 }
 
 export async function getAIResponse(message) {
   console.log('Getting AI response for:', message)
+  
+  const token = getHFToken()
+  if (!token) {
+    console.log('No HF token available')
+    return "שלום! אני סוכן AI מבוסס Hugging Face. כרגע אין לי גישה ל-API, אבל אני יכול לעזור לך עם שאלות בסיסיות!"
+  }
+  
+  console.log('Using HF token:', token ? 'Available' : 'Not available')
   
   // Try different models that should work
   const models = [
@@ -26,7 +32,7 @@ export async function getAIResponse(message) {
       const response = await fetch(`https://api-inference.huggingface.co/models/${model}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${getHFToken()}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
