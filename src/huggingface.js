@@ -17,11 +17,11 @@ export async function getAIResponse(message) {
   
   console.log('Using HF token:', token ? 'Available' : 'Not available')
   
-  // Try different models that should work
+  // Try different models with correct API format
   const models = [
     'microsoft/DialoGPT-medium',
-    'facebook/blenderbot-400M-distill',
     'microsoft/DialoGPT-small',
+    'facebook/blenderbot-400M-distill',
     'gpt2'
   ]
   
@@ -38,10 +38,10 @@ export async function getAIResponse(message) {
         body: JSON.stringify({
           inputs: message,
           parameters: {
-            max_new_tokens: 100,
+            max_length: 100,
             temperature: 0.7,
             do_sample: true,
-            return_full_text: false
+            pad_token_id: 50256
           },
           options: {
             wait_for_model: true,
@@ -59,16 +59,20 @@ export async function getAIResponse(message) {
         if (data && Array.isArray(data) && data.length > 0) {
           const result = data[0]
           
+          // Handle different response formats
           if (result.generated_text) {
             let aiResponse = result.generated_text.trim()
             
-            // Clean up the response
+            // Clean up the response - remove the input text if it's repeated
             if (aiResponse.startsWith(message)) {
               aiResponse = aiResponse.substring(message.length).trim()
             }
             
-            // Remove common prefixes
-            aiResponse = aiResponse.replace(/^(Human:|AI:|Bot:|Assistant:)/i, '').trim()
+            // Remove common prefixes and artifacts
+            aiResponse = aiResponse
+              .replace(/^(Human:|AI:|Bot:|Assistant:|User:)/i, '')
+              .replace(/^\s*[-:]\s*/, '')
+              .trim()
             
             if (aiResponse && aiResponse.length > 3) {
               console.log('Returning AI response:', aiResponse)
@@ -76,13 +80,17 @@ export async function getAIResponse(message) {
             }
           }
           
+          // Try other possible response fields
           if (result.response) {
-            console.log('Returning response field:', result.response)
-            return result.response
+            return result.response.trim()
+          }
+          
+          if (result.text) {
+            return result.text.trim()
           }
         }
         
-        // If we get here, try to extract any text from the response
+        // If we get a string response directly
         if (typeof data === 'string' && data.length > 3) {
           return data.trim()
         }
@@ -94,8 +102,14 @@ export async function getAIResponse(message) {
         
         // If it's a 503 (model loading), wait and try again
         if (response.status === 503) {
-          console.log('Model is loading, waiting 2 seconds...')
-          await new Promise(resolve => setTimeout(resolve, 2000))
+          console.log('Model is loading, waiting 3 seconds...')
+          await new Promise(resolve => setTimeout(resolve, 3000))
+          continue
+        }
+        
+        // If it's 401, the token might be invalid
+        if (response.status === 401) {
+          console.log('Authentication failed - token might be invalid')
           continue
         }
       }
@@ -107,5 +121,5 @@ export async function getAIResponse(message) {
   
   // If all models fail, return a helpful message
   console.log('All AI models failed, returning fallback message')
-  return "שלום! אני סוכן AI מבוסס Hugging Face. איך אני יכול לעזור לך היום? (המודלים נטענים כרגע, נסה שוב בעוד רגע)"
+  return "שלום! אני סוכן AI חכם. איך אני יכול לעזור לך היום? (המודלים נטענים כרגע, נסה שוב בעוד רגע או שאל שאלה אחרת)"
 }
