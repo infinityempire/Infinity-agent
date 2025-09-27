@@ -33,8 +33,10 @@ function App() {
     setIsTyping(true)
     
     try {
+      console.log('Sending to HF API:', userMessage)
       // Get AI response from Hugging Face API
       const response = await getAIResponse(userMessage)
+      console.log('Received response:', response)
       
       setIsTyping(false)
       
@@ -47,6 +49,7 @@ function App() {
       
       setMessages(prev => [...prev, newMessage])
     } catch (error) {
+      console.error('Agent response error:', error)
       setIsTyping(false)
       
       const errorMessage = {
