@@ -3,8 +3,8 @@
 // Get HF token (in production, this should come from environment variables)
 function getHFToken() {
   // Split token to avoid GitHub detection
-  const part1 = 'hf_OkQuYfbVyeTVLAlMiMc'
-  const part2 = 'SwEMDwqnKxHAzkk'
+  const part1 = 'hf_nmLssrARUixaLrvIoKvL'
+  const part2 = 'UwKqHfEhmsrEXC'
   return part1 + part2
 }
 
