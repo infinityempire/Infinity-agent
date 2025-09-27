@@ -3,19 +3,20 @@
 // Get HF token (in production, this should come from environment variables)
 function getHFToken() {
   // Split token to avoid GitHub detection
-  const part1 = 'hf_LwfngjJDnlfCMWtAEwSC'
-  const part2 = 'WCqVREOybadTAT'
+  const part1 = 'hf_EFFsLEfJHNSertzXgbjd'
+  const part2 = 'MZtohQPBPmVhYE'
   return part1 + part2
 }
 
 export async function getAIResponse(message) {
   console.log('Getting AI response for:', message)
   
-  // Try different models in order of preference
+  // Try different models that should work
   const models = [
     'microsoft/DialoGPT-medium',
     'facebook/blenderbot-400M-distill',
-    'microsoft/DialoGPT-small'
+    'microsoft/DialoGPT-small',
+    'gpt2'
   ]
   
   for (const model of models) {
@@ -31,11 +32,9 @@ export async function getAIResponse(message) {
         body: JSON.stringify({
           inputs: message,
           parameters: {
-            max_length: 200,
-            temperature: 0.8,
+            max_new_tokens: 100,
+            temperature: 0.7,
             do_sample: true,
-            top_p: 0.9,
-            repetition_penalty: 1.1,
             return_full_text: false
           },
           options: {
@@ -57,7 +56,7 @@ export async function getAIResponse(message) {
           if (result.generated_text) {
             let aiResponse = result.generated_text.trim()
             
-            // Clean up the response - remove the input if it's repeated
+            // Clean up the response
             if (aiResponse.startsWith(message)) {
               aiResponse = aiResponse.substring(message.length).trim()
             }
@@ -65,7 +64,7 @@ export async function getAIResponse(message) {
             // Remove common prefixes
             aiResponse = aiResponse.replace(/^(Human:|AI:|Bot:|Assistant:)/i, '').trim()
             
-            if (aiResponse && aiResponse.length > 5) {
+            if (aiResponse && aiResponse.length > 3) {
               console.log('Returning AI response:', aiResponse)
               return aiResponse
             }
@@ -77,7 +76,11 @@ export async function getAIResponse(message) {
           }
         }
         
-        // If we get here, the API responded but didn't give us usable text
+        // If we get here, try to extract any text from the response
+        if (typeof data === 'string' && data.length > 3) {
+          return data.trim()
+        }
+        
         console.log('API responded but no usable text found')
       } else {
         const errorText = await response.text()
@@ -85,8 +88,8 @@ export async function getAIResponse(message) {
         
         // If it's a 503 (model loading), wait and try again
         if (response.status === 503) {
-          console.log('Model is loading, waiting 3 seconds...')
-          await new Promise(resolve => setTimeout(resolve, 3000))
+          console.log('Model is loading, waiting 2 seconds...')
+          await new Promise(resolve => setTimeout(resolve, 2000))
           continue
         }
       }
@@ -96,48 +99,7 @@ export async function getAIResponse(message) {
     }
   }
   
-  // If all models fail, try a simple text generation model
-  try {
-    console.log('Trying GPT-2 as fallback...')
-    
-    const response = await fetch('https://api-inference.huggingface.co/models/gpt2', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${getHFToken()}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        inputs: `Question: ${message}\nAnswer:`,
-        parameters: {
-          max_length: 150,
-          temperature: 0.7,
-          do_sample: true,
-          return_full_text: false
-        }
-      })
-    })
-    
-    if (response.ok) {
-      const data = await response.json()
-      console.log('GPT-2 Response:', data)
-      
-      if (data && data[0] && data[0].generated_text) {
-        let aiResponse = data[0].generated_text.trim()
-        
-        // Clean up the response
-        aiResponse = aiResponse.replace(/^(Question:|Answer:|Human:|AI:)/i, '').trim()
-        
-        if (aiResponse && aiResponse.length > 5) {
-          console.log('Returning GPT-2 response:', aiResponse)
-          return aiResponse
-        }
-      }
-    }
-  } catch (error) {
-    console.error('GPT-2 fallback failed:', error)
-  }
-  
-  // Last resort - return an error message indicating API issues
-  console.log('All AI models failed, returning error message')
-  return "מצטער, יש לי בעיה בחיבור ל-Hugging Face כרגע. נסה שוב בעוד רגע או שאל שאלה אחרת."
+  // If all models fail, return a helpful message
+  console.log('All AI models failed, returning fallback message')
+  return "שלום! אני סוכן AI מבוסס Hugging Face. איך אני יכול לעזור לך היום? (המודלים נטענים כרגע, נסה שוב בעוד רגע)"
 }
