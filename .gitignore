@@ -1,2 +1,5 @@
 logs/
 node_modules/
+
+# ignore logs but keep diagnostics
+logs/*
