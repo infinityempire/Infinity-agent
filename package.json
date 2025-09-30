@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "diagnose": "bash scripts/deep-diagnose.sh",
+    "last:report": "bash scripts/last-report.sh",
+    "super:diagnose": "bash scripts/super-diagnose.sh"
   },
   "dependencies": {
     "react": "^18.3.1",
