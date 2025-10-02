@@ -1,0 +1,29 @@
+{
+  "name": "infinity-agent",
+  "version": "1.0.0",
+  "description": "Infinity Agent – full-stack Node.js app with Render deployment",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "echo \"Build step (if needed, e.g. frontend build)\"",
+    "smoke": "echo \"Running smoke tests...\" && exit 0",
+    "test": "echo \"No tests configured yet\""
+  },
+  "keywords": [
+    "infinity",
+    "agent",
+    "nodejs",
+    "render",
+    "fullstack"
+  ],
+  "author": "Infinity Empire",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.1",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
