@@ -1,0 +1,40 @@
+name: ♾️ Infinity Agent QA + Run
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  qa-build-run:
+    runs-on: ubuntu-latest
+
+    steps:
+      # שלב 1 - Checkout
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      # שלב 2 - התקנת Node.js
+      - name: ⚡ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # שלב 3 - התקנת תלויות
+      - name: 📦 Install dependencies
+        run: npm install
+
+      # שלב 4 - הפעלת סקריפט QA+Run
+      - name: 🔍 Run Infinity QA + Start App
+        run: |
+          chmod +x verify-infinity-run.sh
+          ./verify-infinity-run.sh
+
+      # שלב 5 - שמירת לוגים כ־Artifact
+      - name: 📑 Upload logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-logs
+          path: report.log
