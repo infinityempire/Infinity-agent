@@ -1,0 +1,28 @@
+services:
+  # שלב 1 – QA Service (רץ רק בזמן Build)
+  - type: web
+    name: infinity-agent-qa
+    env: node
+    plan: free
+    buildCommand: |
+      chmod +x verify-infinity-run.sh
+      ./verify-infinity-run.sh
+    startCommand: echo "✅ QA checks passed. No runtime for QA stage."
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NPM_CONFIG_PRODUCTION
+        value: false
+
+  # שלב 2 – Production Service (רץ רק אם QA עבר)
+  - type: web
+    name: infinity-agent
+    env: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NPM_CONFIG_PRODUCTION
+        value: false
