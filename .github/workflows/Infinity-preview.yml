@@ -1,0 +1,41 @@
+name: ♾️ Infinity Agent Live Preview
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # אפשר להריץ גם ידנית
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30   # שומר על האפליקציה זמינה חצי שעה
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ⚡ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: npm install
+
+      - name: 🔍 Run QA (verify-infinity-run.sh)
+        run: |
+          chmod +x verify-infinity-run.sh
+          ./verify-infinity-run.sh || exit 1
+
+      - name: 🚀 Start Infinity Agent Preview
+        run: |
+          nohup npm start &
+          sleep 5
+          echo "🌍 App running on http://localhost:3000"
+
+      - name: 🔗 Expose Preview via GitHub
+        uses: jwalton/gh-docker-urls@v2
+        with:
+          port: 3000
