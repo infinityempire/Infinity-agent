@@ -1,0 +1,1 @@
+export default function handler(req, res) { if (req.method !== "POST") return res.status(405).json({ error: "Only POST supported" }); const body = req.body || {}; const msg = body.message || "no message"; res.status(200).json({ status: "success", reply: `🤖 Agent received: ${msg}` }); }
