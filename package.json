@@ -17,6 +17,7 @@
     "vite": "^7.1.9"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.4",
     "nodemon": "^3.1.0"
   },
   "keywords": [
