@@ -1,1 +1,16 @@
-{"projectId":"prj_CzxmBOIYbLGbEK0XR6sKuEreMFpe","orgId":"team_LTL3jICvAWF22kTuRbvi8sxk","projectName":"infinity-agent"}
+{
+  "projectId": "prj_CzxmBOIYbLGbEK0XR6sKuEreMFpe",
+  "orgId": "team_LTL3jICvAWF22kTuRbvi8sxk",
+  "projectName": "infinity-agent",
+  "settings": {
+    "createdAt": 1759427317797,
+    "framework": null,
+    "devCommand": "npm run build",
+    "installCommand": "npm install",
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist",
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "22.x"
+  }
+}

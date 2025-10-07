@@ -1,0 +1,17 @@
+{
+  "version": 3,
+  "routes": [
+    {
+      "src": "^/api/(.*)$",
+      "dest": "/api/$1.js"
+    },
+    {
+      "src": "^/(.*)$",
+      "dest": "/index.html"
+    }
+  ],
+  "framework": {
+    "version": "7.1.9"
+  },
+  "crons": []
+}
